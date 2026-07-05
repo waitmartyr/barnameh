@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>دفترچه فعالیت‌ها</title>
+  
+  <!-- تنظیمات iOS برای حالت تمام‌صفحه -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="دفترچه">
+  
+  <!-- لینک فایل manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- آیکون پیش‌فرض (برای iOS) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234a90d9'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif'>📋</text></svg>">
+  
+  <!-- فونت وزیر -->
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
+  <!-- jalaali-js -->
+  <script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.2.6/dist/jalaali.min.js"></script>
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* همان استایل قبلی، بدون تغییر */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Vazir',sans-serif; }
+    body { background:#e8ecf1; padding:20px 12px; display:flex; justify-content:center; min-height:100vh; }
+    #app { width:100%; max-width:720px; background:#fff; border-radius:24px; box-shadow:0 20px 40px rgba(0,0,0,0.08); padding:24px 20px 32px; display:flex; flex-direction:column; gap:24px; }
+    .tabs-container { display:flex; align-items:center; gap:8px; overflow-x:auto; padding-bottom:8px; border-bottom:2px solid #f0f2f5; }
+    .tabs { display:flex; gap:6px; flex:1; }
+    .tab { padding:10px 18px; background:#f0f3f7; border-radius:12px 12px 0 0; cursor:pointer; font-weight:500; font-size:0.95rem; transition:all 0.2s; white-space:nowrap; display:flex; align-items:center; gap:10px; color:#444; }
+    .tab.active { background:#4a90d9; color:white; }
+    .tab-delete { background:none; border:none; font-size:1.1rem; cursor:pointer; color:inherit; opacity:0.7; transition:0.2s; line-height:1; padding:0 4px; }
+    .tab-delete:hover { opacity:1; transform:scale(1.2); }
+    .add-tab-btn { background:#4a90d9; color:white; border:none; border-radius:12px; width:38px; height:38px; font-size:1.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; flex-shrink:0; }
+    .add-tab-btn:hover { background:#357abd; }
+    .tab-content { display:flex; flex-direction:column; gap:20px; }
+    .list-title-input { font-size:1.5rem; font-weight:700; border:none; border-bottom:2px dashed #ccc; padding:6px 2px; background:transparent; outline:none; width:100%; color:#1e293b; transition:border-color 0.2s; }
+    .list-title-input:focus { border-bottom-color:#4a90d9; }
+    .items-section { background:#f9fafb; border-radius:16px; padding:16px; }
+    .item-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; background:white; padding:10px 12px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02); }
+    .item-checkbox { width:22px; height:22px; accent-color:#22c55e; cursor:pointer; flex-shrink:0; }
+    .item-text { flex:1; font-weight:500; color:#1e293b; }
+    .item-actions { display:flex; gap:6px; }
+    .icon-btn { background:#f1f5f9; border:none; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+    .icon-btn:hover { background:#e2e8f0; }
+    .add-item-btn { background:#eef2ff; color:#4a90d9; border:2px dashed #4a90d9; padding:10px 16px; border-radius:12px; font-weight:600; cursor:pointer; width:100%; margin-top:4px; transition:0.2s; }
+    .add-item-btn:hover { background:#dfe8ff; }
+    .date-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; background:#f9fafb; padding:14px; border-radius:16px; }
+    .date-input { width:70px; padding:10px; border:1px solid #ddd; border-radius:10px; text-align:center; font-weight:600; font-size:1rem; }
+    .weekday-select { padding:10px; border-radius:10px; border:1px solid #ddd; background:white; font-weight:600; flex:1; min-width:140px; }
+    .note-area { width:100%; padding:14px; border-radius:14px; border:1px solid #ddd; resize:vertical; min-height:80px; font-size:0.95rem; background:#fafafa; }
+    .primary-btn { background:#4a90d9; color:white; border:none; padding:14px 28px; border-radius:14px; font-weight:700; font-size:1.1rem; cursor:pointer; transition:background 0.2s; box-shadow:0 6px 14px rgba(74,144,217,0.3); }
+    .primary-btn:hover { background:#357abd; }
+    .toggle-btn { background:white; border:1px solid #d1d5db; padding:12px 20px; border-radius:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:space-between; transition:0.2s; color:#1e293b; }
+    .toggle-btn:hover { background:#f3f4f6; }
+    .history-section, .chart-section { margin-top:8px; }
+    .flashcard { background:#ffffff; border:1px solid #e5e7eb; border-radius:20px; padding:18px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.04); transition:0.2s; }
+    .flashcard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-weight:700; font-size:1.05rem; }
+    .flashcard-date { color:#1e293b; }
+    .flashcard-weekday { background:#eef2ff; padding:4px 14px; border-radius:20px; color:#4a59d9; }
+    .flashcard-items { list-style:none; margin-bottom:12px; }
+    .flashcard-items li { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #f3f4f6; }
+    .done-icon { color:#22c55e; font-weight:bold; font-size:1.2rem; }
+    .undone-icon { color:#ef4444; font-weight:bold; font-size:1.2rem; }
+    .flashcard-note { background:#f9fafb; padding:10px; border-radius:10px; font-style:italic; color:#4b5563; }
+    .snapshot-btn { background:#f1f5f9; border:none; border-radius:10px; padding:8px 16px; cursor:pointer; font-weight:600; font-size:0.9rem; margin-top:10px; display:flex; align-items:center; gap:6px; transition:0.2s; }
+    .snapshot-btn:hover { background:#e2e8f0; }
+    .record-delete { background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:1.2rem; padding:0 6px; }
+    .record-delete:hover { color:#ef4444; }
+    .chart-wrapper { background:white; border-radius:20px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-top:12px; }
+    hr { border:none; border-top:1px solid #edf2f7; margin:8px 0; }
+    @media (max-width:500px) { #app { padding:16px; } .date-input { width:60px; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div style="text-align:center; font-weight:700; font-size:1.3rem; color:#1e293b;">📋 دفترچه فعالیت‌ها</div>
+    <div class="tabs-container">
+      <div id="tabs" class="tabs"></div>
+      <button id="addTabBtn" class="add-tab-btn" title="افزودن لیست جدید">+</button>
+    </div>
+    <div id="tabContent" class="tab-content"></div>
+    <button id="toggleHistoryBtn" class="toggle-btn">📅 مشاهده سوابق و فلش کارت‌ها <span id="historyArrow">▼</span></button>
+    <div id="historySection" class="history-section" style="display:none;"></div>
+    <button id="toggleChartBtn" class="toggle-btn">📈 نمایش نمودار پیشرفت <span id="chartArrow">▼</span></button>
+    <div id="chartSection" class="chart-section" style="display:none;">
+      <div class="chart-wrapper"><canvas id="progressChart" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- تمام اسکریپت قبلی ----------
+    (function() {
+      const STORAGE_KEY = 'advanced_daily_planner';
+      let lists = [];
+      let currentListId = null;
+      let chartInstance = null;
+
+      const tabsDiv = document.getElementById('tabs');
+      const addTabBtn = document.getElementById('addTabBtn');
+      const tabContentDiv = document.getElementById('tabContent');
+      const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+      const historySection = document.getElementById('historySection');
+      const historyArrow = document.getElementById('historyArrow');
+      const toggleChartBtn = document.getElementById('toggleChartBtn');
+      const chartSection = document.getElementById('chartSection');
+      const chartArrow = document.getElementById('chartArrow');
+      const progressChartCtx = document.getElementById('progressChart').getContext('2d');
+
+      function isValidJalaaliDate(day, month, year) {
+        return jalaali.isValidJalaaliDate(year, month, day);
+      }
+      function getGregorianTimestamp(day, month, year) {
+        const g = jalaali.toGregorian(year, month, day);
+        return new Date(g.gy, g.gm - 1, g.gd).getTime();
+      }
+      function loadData() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) { try { lists = JSON.parse(stored); } catch(e) { lists = []; } }
+        if (!lists || lists.length === 0) {
+          const defaultList = {
+            id: generateId(), title: 'فعالیت‌های روزانه',
+            items: [
+              { id: generateId(), text: 'ورزش صبحگاهی' },
+              { id: generateId(), text: 'مطالعه روزانه' },
+              { id: generateId(), text: 'نوشیدن ۸ لیوان آب' },
+            ],
+            records: []
+          };
+          lists = [defaultList];
+        }
+      }
+      function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(lists)); }
+      function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+      function getCurrentList() { return lists.find(l => l.id === currentListId) || lists[0]; }
+      function renderAll() {
+        renderTabs(); renderTabContent();
+        if (historySection.style.display !== 'none') renderHistory();
+        if (chartSection.style.display !== 'none') renderChart();
+      }
+      function renderTabs() {
+        tabsDiv.innerHTML = '';
+        lists.forEach(list => {
+          const tab = document.createElement('div');
+          tab.className = 'tab' + (list.id === currentListId ? ' active' : '');
+          tab.dataset.listId = list.id;
+          tab.innerHTML = `<span class="tab-title">${escapeHtml(list.title) || 'بدون عنوان'}</span><button class="tab-delete" data-delete="${list.id}" title="حذف لیست">✕</button>`;
+          tab.querySelector('.tab-title').addEventListener('click', (e) => { e.stopPropagation(); switchTab(list.id); });
+          tab.querySelector('.tab-delete').addEventListener('click', (e) => { e.stopPropagation(); deleteList(list.id); });
+          tabsDiv.appendChild(tab);
+        });
+      }
+      function switchTab(listId) { if(currentListId === listId) return; currentListId = listId; renderAll(); }
+      function deleteList(listId) {
+        if(lists.length <= 1) { alert('حداقل یک لیست باید وجود داشته باشد.'); return; }
+        if(!confirm('آیا از حذف این لیست مطمئن هستید؟')) return;
+        lists = lists.filter(l => l.id !== listId);
+        if(currentListId === listId) currentListId = lists[0].id;
+        saveData(); renderAll();
+      }
+      function addNewList() {
+        const title = prompt('عنوان لیست جدید:', 'لیست جدید');
+        if(title === null) return;
+        const trimmed = title.trim() || 'بدون عنوان';
+        const newList = { id: generateId(), title: trimmed, items: [], records: [] };
+        lists.push(newList); currentListId = newList.id; saveData(); renderAll();
+      }
+      function updateListTitle(newTitle) {
+        const list = getCurrentList(); if(!list) return;
+        list.title = newTitle.trim() || 'بدون عنوان'; saveData(); renderTabs();
+      }
+      function addItem(text) {
+        const list = getCurrentList(); if(!list) return;
+        const trimmed = text.trim(); if(!trimmed) return;
+        list.items.push({ id: generateId(), text: trimmed }); saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
+      }
+      function deleteItem(itemId) {
+        const list = getCurrentList(); if(!list) return;
+        list.items = list.items.filter(i => i.id !== itemId); saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
+      }
+      function updateItemText(itemId, newText) {
+        const list = getCurrentList(); if(!list) return;
+        const item = list.items.find(i => i.id === itemId);
+        if(item && newText.trim()) { item.text = newText.trim(); saveData(); renderTabContent(); updateHistoryAndChartIfOpen(); }
+      }
+      function submitDailyRecord() {
+        const list = getCurrentList(); if(!list) return;
+        const dayInput = document.getElementById('dayInput');
+        const monthInput = document.getElementById('monthInput');
+        const yearInput = document.getElementById('yearInput');
+        const weekdaySelect = document.getElementById('weekdaySelect');
+        const noteArea = document.getElementById('noteArea');
+        const day = parseInt(dayInput.value,10);
+        const month = parseInt(monthInput.value,10);
+        const year = parseInt(yearInput.value,10);
+        const weekday = weekdaySelect.value;
+        if(!day || !month || !year || !weekday) { alert('لطفاً تاریخ شمسی کامل و روز هفته را وارد کنید.'); return; }
+        if(!isValidJalaaliDate(day,month,year)) { alert('تاریخ شمسی معتبر نیست.'); return; }
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const checkedItemIds = []; checkboxes.forEach(cb => { if(cb.checked) checkedItemIds.push(cb.dataset.itemId); });
+        const note = noteArea.value.trim();
+        const timestamp = getGregorianTimestamp(day,month,year);
+        list.records.push({
+          date: { day, month, year }, weekday, checkedItemIds, note, timestamp, totalItems: list.items.length
+        });
+        saveData();
+        dayInput.value = ''; monthInput.value = ''; yearInput.value = ''; weekdaySelect.value = ''; noteArea.value = '';
+        checkboxes.forEach(cb => cb.checked = false);
+        renderTabContent(); updateHistoryAndChartIfOpen(); alert('✅ فعالیت‌ها ثبت شدند.');
+      }
+      function updateHistoryAndChartIfOpen() {
+        if(historySection.style.display !== 'none') renderHistory();
+        if(chartSection.style.display !== 'none') renderChart();
+      }
+      function renderTabContent() {
+        const list = getCurrentList(); if(!list) { tabContentDiv.innerHTML = '<p>لیستی انتخاب نشده.</p>'; return; }
+        let itemsHtml = '';
+        list.items.forEach(item => {
+          itemsHtml += `<div class="item-row"><input type="checkbox" class="item-checkbox" data-item-id="${item.id}"><span class="item-text">${escapeHtml(item.text)}</span><div class="item-actions"><button class="icon-btn edit-item-btn" data-edit-id="${item.id}">✎</button><button class="icon-btn delete-item-btn" data-delete-id="${item.id}">✕</button></div></div>`;
+        });
+        const html = `
+          <input type="text" class="list-title-input" value="${escapeHtml(list.title)}" id="listTitleInput" placeholder="عنوان لیست">
+          <div class="items-section">${itemsHtml || '<p style="color:#888;text-align:center;">هنوز آیتمی اضافه نکرده‌اید.</p>'}<button class="add-item-btn" id="addItemBtn">+ افزودن فعالیت جدید</button></div>
+          <div class="date-row">
+            <input type="number" class="date-input" id="dayInput" placeholder="روز" min="1" max="31">
+            <input type="number" class="date-input" id="monthInput" placeholder="ماه" min="1" max="12">
+            <input type="number" class="date-input" id="yearInput" placeholder="سال" min="1300" max="1500">
+            <select class="weekday-select" id="weekdaySelect"><option value="">انتخاب روز هفته...</option><option value="شنبه">شنبه</option><option value="یکشنبه">یکشنبه</option><option value="دوشنبه">دوشنبه</option><option value="سه‌شنبه">سه‌شنبه</option><option value="چهارشنبه">چهارشنبه</option><option value="پنجشنبه">پنجشنبه</option><option value="جمعه">جمعه</option></select>
+          </div>
+          <textarea class="note-area" id="noteArea" placeholder="یادداشت روزانه ..."></textarea>
+          <button class="primary-btn" id="submitRecordBtn">📌 ثبت فعالیت‌ها</button>`;
+        tabContentDiv.innerHTML = html;
+        document.getElementById('listTitleInput').addEventListener('blur', function(e){ updateListTitle(e.target.value); });
+        document.getElementById('addItemBtn').addEventListener('click', ()=>{ const t = prompt('عنوان فعالیت جدید:'); if(t) addItem(t); });
+        document.getElementById('submitRecordBtn').addEventListener('click', submitDailyRecord);
+        document.querySelectorAll('.edit-item-btn').forEach(btn => {
+          btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            const itemId = this.dataset.editId;
+            const list = getCurrentList(); const item = list.items.find(i=>i.id===itemId);
+            if(item){ const nt = prompt('ویرایش فعالیت:', item.text); if(nt !== null) updateItemText(itemId, nt); }
+          });
+        });
+        document.querySelectorAll('.delete-item-btn').forEach(btn => {
+          btn.addEventListener('click', function(e){ e.stopPropagation(); if(confirm('آیا حذف شود؟')) deleteItem(this.dataset.deleteId); });
+        });
+      }
+      function renderHistory() {
+        const list = getCurrentList(); if(!list || list.records.length===0) { historySection.innerHTML='<p style="text-align:center;color:#888;">هنوز گزارشی ثبت نشده.</p>'; return; }
+        const sorted = [...list.records].sort((a,b)=>b.timestamp - a.timestamp);
+        let cardsHtml = '';
+        sorted.forEach((record,idx) => {
+          const recordId = `record-${list.id}-${idx}`;
+          let itemsHtml = '';
+          list.items.forEach(item => {
+            const checked = record.checkedItemIds.includes(item.id);
+            itemsHtml += `<li><span class="${checked?'done-icon':'undone-icon'}">${checked?'✓':'✗'}</span><span>${escapeHtml(item.text)}</span></li>`;
+          });
+          cardsHtml += `<div class="flashcard" id="${recordId}"><div class="flashcard-header"><span class="flashcard-date">📆 ${record.date.year}/${record.date.month}/${record.date.day}</span><span class="flashcard-weekday">${record.weekday}</span><button class="record-delete" data-delete-index="${idx}">🗑️</button></div><ul class="flashcard-items">${itemsHtml}</ul>${record.note?`<div class="flashcard-note">📝 ${escapeHtml(record.note)}</div>`:''}<button class="snapshot-btn" data-snapshot="${recordId}">📸 عکس گرفتن</button></div>`;
+        });
+        historySection.innerHTML = cardsHtml;
+        document.querySelectorAll('.record-delete').forEach(btn => {
+          btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            const recIdx = parseInt(this.dataset.deleteIndex);
+            if(confirm('این گزارش حذف شود؟')) {
+              const list = getCurrentList();
+              const sorted = [...list.records].sort((a,b)=>b.timestamp - a.timestamp);
+              const target = sorted[recIdx];
+              list.records = list.records.filter(r => r !== target);
+              saveData(); renderHistory(); if(chartSection.style.display!=='none') renderChart();
+            }
+          });
+        });
+        document.querySelectorAll('.snapshot-btn').forEach(btn => {
+          btn.addEventListener('click', function(){
+            const card = document.getElementById(this.dataset.snapshot);
+            if(!card) return;
+            html2canvas(card,{scale:2,backgroundColor:'#fff'}).then(canvas=>{
+              const link = document.createElement('a');
+              link.download = `گزارش-${new Date().toISOString().slice(0,10)}.png`;
+              link.href = canvas.toDataURL('image/png'); link.click();
+            });
+          });
+        });
+      }
+      function renderChart() {
+        const list = getCurrentList();
+        if(!list || list.records.length===0) { chartSection.innerHTML='<p style="text-align:center;color:#888;">داده‌ای برای نمودار نیست.</p>'; if(chartInstance){chartInstance.destroy();chartInstance=null;} return; }
+        const sorted = [...list.records].sort((a,b)=>a.timestamp - b.timestamp);
+        const labels = sorted.map(r=>`${r.date.year}/${r.date.month}/${r.date.day}`);
+        const dataPoints = sorted.map(r=>r.totalItems===0?0:Math.round((r.checkedItemIds.length/r.totalItems)*100));
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(progressChartCtx,{
+          type:'line', data:{ labels, datasets:[{ label:'درصد انجام', data:dataPoints, borderColor:'#4a90d9', backgroundColor:'rgba(74,144,217,0.1)', fill:true, tension:0.3, pointBackgroundColor:'#4a90d9', pointRadius:4 }] },
+          options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, max:100, ticks:{callback:v=>v+'%'} } } }
+        });
+      }
+      function escapeHtml(text) { return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+      addTabBtn.addEventListener('click', addNewList);
+      toggleHistoryBtn.addEventListener('click', ()=>{
+        if(historySection.style.display==='none'){ historySection.style.display='block'; historyArrow.textContent='▲'; renderHistory(); }
+        else { historySection.style.display='none'; historyArrow.textContent='▼'; }
+      });
+      toggleChartBtn.addEventListener('click', ()=>{
+        if(chartSection.style.display==='none'){ chartSection.style.display='block'; chartArrow.textContent='▲'; renderChart(); }
+        else { chartSection.style.display='none'; chartArrow.textContent='▼'; if(chartInstance){chartInstance.destroy();chartInstance=null;} }
+      });
+
+      loadData();
+      if(!currentListId && lists.length>0) currentListId = lists[0].id;
+      renderAll();
+
+      // ثبت سرویس ورکر برای PWA
+      if('serviceWorker' in navigator) {
+        window.addEventListener('load', ()=>{
+          navigator.serviceWorker.register('sw.js').then(reg=>{
+            console.log('ServiceWorker registered:', reg.scope);
+          }).catch(err=>{
+            console.log('ServiceWorker failed:', err);
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
