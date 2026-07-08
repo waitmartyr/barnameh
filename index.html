@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>دفترچه فعالیت‌ها</title>
   
-  <!-- تنظیمات iOS برای حالت تمام‌صفحه -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="دفترچه">
@@ -68,6 +67,9 @@
     .record-delete { background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:1.2rem; padding:0 6px; }
     .record-delete:hover { color:#ef4444; }
     .chart-wrapper { background:white; border-radius:20px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin-top:12px; }
+    .backup-row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+    .backup-btn { background:#f8fafc; border:1px solid #d1d5db; padding:10px 18px; border-radius:12px; cursor:pointer; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px; transition:0.2s; color:#1e293b; }
+    .backup-btn:hover { background:#f1f5f9; }
     hr { border:none; border-top:1px solid #edf2f7; margin:8px 0; }
     @media (max-width:500px) { #app { padding:16px; } .date-input { width:60px; } }
   </style>
@@ -85,6 +87,11 @@
     <button id="toggleChartBtn" class="toggle-btn">📈 نمایش نمودار پیشرفت <span id="chartArrow">▼</span></button>
     <div id="chartSection" class="chart-section" style="display:none;">
       <div class="chart-wrapper"><canvas id="progressChart" height="200"></canvas></div>
+    </div>
+    <hr>
+    <div class="backup-row">
+      <button id="exportBtn" class="backup-btn">📥 دریافت پشتیبان (خروجی JSON)</button>
+      <button id="importBtn" class="backup-btn">📤 بازیابی از پشتیبان (ورودی JSON)</button>
     </div>
   </div>
 
@@ -105,6 +112,13 @@
       const chartSection = document.getElementById('chartSection');
       const chartArrow = document.getElementById('chartArrow');
       const progressChartCtx = document.getElementById('progressChart').getContext('2d');
+      const exportBtn = document.getElementById('exportBtn');
+      const importBtn = document.getElementById('importBtn');
+      const importFileInput = document.createElement('input');
+      importFileInput.type = 'file';
+      importFileInput.accept = '.json';
+      importFileInput.style.display = 'none';
+      document.body.appendChild(importFileInput);
 
       function isValidJalaaliDate(day, month, year) { return jalaali.isValidJalaaliDate(year, month, day); }
       function getGregorianTimestamp(day, month, year) {
@@ -125,12 +139,64 @@
             records: []
           }];
         }
-        // اطمینان از وجود فیلد description برای آیتم‌های قدیمی
         lists.forEach(list => list.items.forEach(item => { if (item.description === undefined) item.description = ''; }));
       }
       function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(lists)); }
       function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
       function getCurrentList() { return lists.find(l => l.id === currentListId) || lists[0]; }
+
+      // Export: دانلود فایل JSON
+      function exportData() {
+        const dataStr = JSON.stringify(lists, null, 2);
+        const blob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('✅ فایل پشتیبان با موفقیت دانلود شد.');
+      }
+
+      // Import: خواندن فایل و جایگزینی
+      function importData(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (!Array.isArray(imported)) throw new Error('فرمت نادرست');
+            // اعتبارسنجی ساده
+            imported.forEach(list => {
+              if (!list.id || !list.title || !Array.isArray(list.items) || !Array.isArray(list.records)) {
+                throw new Error('ساختار داده نامعتبر');
+              }
+              list.items.forEach(item => { if (item.description === undefined) item.description = ''; });
+            });
+            lists = imported;
+            saveData();
+            if (!currentListId || !lists.find(l => l.id === currentListId)) {
+              currentListId = lists[0]?.id || null;
+            }
+            renderAll();
+            alert('✅ اطلاعات با موفقیت بازیابی شد.');
+          } catch (error) {
+            alert('❌ خطا در بازیابی فایل. لطفاً فایل پشتیبان معتبر انتخاب کنید.');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      importFileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+          importData(this.files[0]);
+          this.value = ''; // ریست برای استفاده مجدد
+        }
+      });
+
+      exportBtn.addEventListener('click', exportData);
+      importBtn.addEventListener('click', () => importFileInput.click());
 
       function renderAll() {
         renderTabs(); renderTabContent();
@@ -152,7 +218,7 @@
       function switchTab(listId) { if(currentListId === listId) return; currentListId = listId; renderAll(); }
       function deleteList(listId) {
         if(lists.length <= 1) { alert('حداقل یک لیست باید وجود داشته باشد.'); return; }
-        if(!confirm('آیا از حذف این لیست مطمئن هستید؟')) return;
+        if(!confirm('آیا از حذف این لیست و تمام سوابق آن مطمئن هستید؟')) return;
         lists = lists.filter(l => l.id !== listId);
         if(currentListId === listId) currentListId = lists[0].id;
         saveData(); renderAll();
@@ -230,7 +296,7 @@
                 ${item.description ? `<span class="item-desc">${escapeHtml(item.description)}</span>` : ''}
               </div>
               <div class="item-actions">
-                <button class="icon-btn edit-item-btn" data-edit-id="${item.id}" title="ویرایش فعالیت و توضیحات">✎</button>
+                <button class="icon-btn edit-item-btn" data-edit-id="${item.id}" title="ویرایش">✎</button>
                 <button class="icon-btn delete-item-btn" data-delete-id="${item.id}" title="حذف">✕</button>
               </div>
             </div>
