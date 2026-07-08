@@ -10,23 +10,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="دفترچه">
   
-  <!-- لینک فایل manifest -->
   <link rel="manifest" href="manifest.json">
-  
-  <!-- آیکون پیش‌فرض (برای iOS) -->
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234a90d9'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif'>📋</text></svg>">
   
-  <!-- فونت وزیر -->
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet">
-  <!-- jalaali-js -->
   <script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.2.6/dist/jalaali.min.js"></script>
-  <!-- html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
-    /* همان استایل قبلی، بدون تغییر */
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Vazir',sans-serif; }
     body { background:#e8ecf1; padding:20px 12px; display:flex; justify-content:center; min-height:100vh; }
     #app { width:100%; max-width:720px; background:#fff; border-radius:24px; box-shadow:0 20px 40px rgba(0,0,0,0.08); padding:24px 20px 32px; display:flex; flex-direction:column; gap:24px; }
@@ -42,10 +34,12 @@
     .list-title-input { font-size:1.5rem; font-weight:700; border:none; border-bottom:2px dashed #ccc; padding:6px 2px; background:transparent; outline:none; width:100%; color:#1e293b; transition:border-color 0.2s; }
     .list-title-input:focus { border-bottom-color:#4a90d9; }
     .items-section { background:#f9fafb; border-radius:16px; padding:16px; }
-    .item-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; background:white; padding:10px 12px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02); }
-    .item-checkbox { width:22px; height:22px; accent-color:#22c55e; cursor:pointer; flex-shrink:0; }
-    .item-text { flex:1; font-weight:500; color:#1e293b; }
-    .item-actions { display:flex; gap:6px; }
+    .item-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; background:white; padding:10px 12px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02); }
+    .item-checkbox { width:22px; height:22px; accent-color:#22c55e; cursor:pointer; flex-shrink:0; margin-top:2px; }
+    .item-content { flex:1; display:flex; flex-direction:column; }
+    .item-text { font-weight:500; color:#1e293b; }
+    .item-desc { font-size:0.8rem; color:#9ca3af; margin-top:2px; }
+    .item-actions { display:flex; gap:6px; align-items:center; }
     .icon-btn { background:#f1f5f9; border:none; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:0.2s; }
     .icon-btn:hover { background:#e2e8f0; }
     .add-item-btn { background:#eef2ff; color:#4a90d9; border:2px dashed #4a90d9; padding:10px 16px; border-radius:12px; font-weight:600; cursor:pointer; width:100%; margin-top:4px; transition:0.2s; }
@@ -60,14 +54,15 @@
     .toggle-btn:hover { background:#f3f4f6; }
     .history-section, .chart-section { margin-top:8px; }
     .flashcard { background:#ffffff; border:1px solid #e5e7eb; border-radius:20px; padding:18px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.04); transition:0.2s; }
-    .flashcard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-weight:700; font-size:1.05rem; }
+    .flashcard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-weight:700; font-size:1.05rem; flex-wrap:wrap; gap:8px; }
     .flashcard-date { color:#1e293b; }
     .flashcard-weekday { background:#eef2ff; padding:4px 14px; border-radius:20px; color:#4a59d9; }
+    .flashcard-progress { background:#dcfce7; padding:4px 12px; border-radius:20px; color:#166534; font-size:0.9rem; font-weight:600; }
     .flashcard-items { list-style:none; margin-bottom:12px; }
-    .flashcard-items li { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #f3f4f6; }
+    .flashcard-items li { display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid #f3f4f6; }
     .done-icon { color:#22c55e; font-weight:bold; font-size:1.2rem; }
     .undone-icon { color:#ef4444; font-weight:bold; font-size:1.2rem; }
-    .flashcard-note { background:#f9fafb; padding:10px; border-radius:10px; font-style:italic; color:#4b5563; }
+    .flashcard-note { background:#f9fafb; padding:10px; border-radius:10px; font-style:italic; color:#4b5563; margin-top:8px; }
     .snapshot-btn { background:#f1f5f9; border:none; border-radius:10px; padding:8px 16px; cursor:pointer; font-weight:600; font-size:0.9rem; margin-top:10px; display:flex; align-items:center; gap:6px; transition:0.2s; }
     .snapshot-btn:hover { background:#e2e8f0; }
     .record-delete { background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:1.2rem; padding:0 6px; }
@@ -94,7 +89,6 @@
   </div>
 
   <script>
-    // ---------- تمام اسکریپت قبلی ----------
     (function() {
       const STORAGE_KEY = 'advanced_daily_planner';
       let lists = [];
@@ -112,9 +106,7 @@
       const chartArrow = document.getElementById('chartArrow');
       const progressChartCtx = document.getElementById('progressChart').getContext('2d');
 
-      function isValidJalaaliDate(day, month, year) {
-        return jalaali.isValidJalaaliDate(year, month, day);
-      }
+      function isValidJalaaliDate(day, month, year) { return jalaali.isValidJalaaliDate(year, month, day); }
       function getGregorianTimestamp(day, month, year) {
         const g = jalaali.toGregorian(year, month, day);
         return new Date(g.gy, g.gm - 1, g.gd).getTime();
@@ -123,21 +115,23 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) { try { lists = JSON.parse(stored); } catch(e) { lists = []; } }
         if (!lists || lists.length === 0) {
-          const defaultList = {
+          lists = [{
             id: generateId(), title: 'فعالیت‌های روزانه',
             items: [
-              { id: generateId(), text: 'ورزش صبحگاهی' },
-              { id: generateId(), text: 'مطالعه روزانه' },
-              { id: generateId(), text: 'نوشیدن ۸ لیوان آب' },
+              { id: generateId(), text: 'ورزش صبحگاهی', description: '' },
+              { id: generateId(), text: 'مطالعه روزانه', description: '' },
+              { id: generateId(), text: 'نوشیدن ۸ لیوان آب', description: '' }
             ],
             records: []
-          };
-          lists = [defaultList];
+          }];
         }
+        // اطمینان از وجود فیلد description برای آیتم‌های قدیمی
+        lists.forEach(list => list.items.forEach(item => { if (item.description === undefined) item.description = ''; }));
       }
       function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(lists)); }
       function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
       function getCurrentList() { return lists.find(l => l.id === currentListId) || lists[0]; }
+
       function renderAll() {
         renderTabs(); renderTabContent();
         if (historySection.style.display !== 'none') renderHistory();
@@ -177,16 +171,22 @@
       function addItem(text) {
         const list = getCurrentList(); if(!list) return;
         const trimmed = text.trim(); if(!trimmed) return;
-        list.items.push({ id: generateId(), text: trimmed }); saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
+        const desc = prompt('توضیح کوتاه (اختیاری):');
+        list.items.push({ id: generateId(), text: trimmed, description: desc ? desc.trim() : '' });
+        saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
       }
       function deleteItem(itemId) {
         const list = getCurrentList(); if(!list) return;
         list.items = list.items.filter(i => i.id !== itemId); saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
       }
-      function updateItemText(itemId, newText) {
+      function updateItem(itemId, newText, newDesc) {
         const list = getCurrentList(); if(!list) return;
         const item = list.items.find(i => i.id === itemId);
-        if(item && newText.trim()) { item.text = newText.trim(); saveData(); renderTabContent(); updateHistoryAndChartIfOpen(); }
+        if(item) {
+          if(newText !== null && newText.trim()) item.text = newText.trim();
+          if(newDesc !== null) item.description = newDesc.trim();
+          saveData(); renderTabContent(); updateHistoryAndChartIfOpen();
+        }
       }
       function submitDailyRecord() {
         const list = getCurrentList(); if(!list) return;
@@ -217,11 +217,24 @@
         if(historySection.style.display !== 'none') renderHistory();
         if(chartSection.style.display !== 'none') renderChart();
       }
+
       function renderTabContent() {
         const list = getCurrentList(); if(!list) { tabContentDiv.innerHTML = '<p>لیستی انتخاب نشده.</p>'; return; }
         let itemsHtml = '';
         list.items.forEach(item => {
-          itemsHtml += `<div class="item-row"><input type="checkbox" class="item-checkbox" data-item-id="${item.id}"><span class="item-text">${escapeHtml(item.text)}</span><div class="item-actions"><button class="icon-btn edit-item-btn" data-edit-id="${item.id}">✎</button><button class="icon-btn delete-item-btn" data-delete-id="${item.id}">✕</button></div></div>`;
+          itemsHtml += `
+            <div class="item-row">
+              <input type="checkbox" class="item-checkbox" data-item-id="${item.id}">
+              <div class="item-content">
+                <span class="item-text">${escapeHtml(item.text)}</span>
+                ${item.description ? `<span class="item-desc">${escapeHtml(item.description)}</span>` : ''}
+              </div>
+              <div class="item-actions">
+                <button class="icon-btn edit-item-btn" data-edit-id="${item.id}" title="ویرایش فعالیت و توضیحات">✎</button>
+                <button class="icon-btn delete-item-btn" data-delete-id="${item.id}" title="حذف">✕</button>
+              </div>
+            </div>
+          `;
         });
         const html = `
           <input type="text" class="list-title-input" value="${escapeHtml(list.title)}" id="listTitleInput" placeholder="عنوان لیست">
@@ -235,35 +248,72 @@
           <textarea class="note-area" id="noteArea" placeholder="یادداشت روزانه ..."></textarea>
           <button class="primary-btn" id="submitRecordBtn">📌 ثبت فعالیت‌ها</button>`;
         tabContentDiv.innerHTML = html;
+
         document.getElementById('listTitleInput').addEventListener('blur', function(e){ updateListTitle(e.target.value); });
-        document.getElementById('addItemBtn').addEventListener('click', ()=>{ const t = prompt('عنوان فعالیت جدید:'); if(t) addItem(t); });
+        document.getElementById('addItemBtn').addEventListener('click', ()=>{
+          const text = prompt('عنوان فعالیت جدید:');
+          if(text) addItem(text);
+        });
         document.getElementById('submitRecordBtn').addEventListener('click', submitDailyRecord);
+
         document.querySelectorAll('.edit-item-btn').forEach(btn => {
           btn.addEventListener('click', function(e){
             e.stopPropagation();
             const itemId = this.dataset.editId;
-            const list = getCurrentList(); const item = list.items.find(i=>i.id===itemId);
-            if(item){ const nt = prompt('ویرایش فعالیت:', item.text); if(nt !== null) updateItemText(itemId, nt); }
+            const list = getCurrentList();
+            const item = list.items.find(i => i.id === itemId);
+            if(item) {
+              const newText = prompt('ویرایش عنوان فعالیت:', item.text);
+              if(newText !== null) {
+                const newDesc = prompt('ویرایش توضیح (لغو = بدون تغییر):', item.description || '');
+                updateItem(itemId, newText, newDesc !== null ? newDesc : null);
+              }
+            }
           });
         });
         document.querySelectorAll('.delete-item-btn').forEach(btn => {
-          btn.addEventListener('click', function(e){ e.stopPropagation(); if(confirm('آیا حذف شود؟')) deleteItem(this.dataset.deleteId); });
+          btn.addEventListener('click', function(e){ e.stopPropagation(); if(confirm('آیا این فعالیت حذف شود؟')) deleteItem(this.dataset.deleteId); });
         });
       }
+
       function renderHistory() {
         const list = getCurrentList(); if(!list || list.records.length===0) { historySection.innerHTML='<p style="text-align:center;color:#888;">هنوز گزارشی ثبت نشده.</p>'; return; }
         const sorted = [...list.records].sort((a,b)=>b.timestamp - a.timestamp);
         let cardsHtml = '';
         sorted.forEach((record,idx) => {
           const recordId = `record-${list.id}-${idx}`;
+          const total = record.totalItems || 0;
+          const done = record.checkedItemIds.length;
+          const percent = total > 0 ? Math.round((done / total) * 100) : 0;
           let itemsHtml = '';
           list.items.forEach(item => {
             const checked = record.checkedItemIds.includes(item.id);
-            itemsHtml += `<li><span class="${checked?'done-icon':'undone-icon'}">${checked?'✓':'✗'}</span><span>${escapeHtml(item.text)}</span></li>`;
+            itemsHtml += `
+              <li>
+                <span class="${checked ? 'done-icon' : 'undone-icon'}">${checked ? '✓' : '✗'}</span>
+                <div style="flex:1;">
+                  <span>${escapeHtml(item.text)}</span>
+                  ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
+                </div>
+              </li>
+            `;
           });
-          cardsHtml += `<div class="flashcard" id="${recordId}"><div class="flashcard-header"><span class="flashcard-date">📆 ${record.date.year}/${record.date.month}/${record.date.day}</span><span class="flashcard-weekday">${record.weekday}</span><button class="record-delete" data-delete-index="${idx}">🗑️</button></div><ul class="flashcard-items">${itemsHtml}</ul>${record.note?`<div class="flashcard-note">📝 ${escapeHtml(record.note)}</div>`:''}<button class="snapshot-btn" data-snapshot="${recordId}">📸 عکس گرفتن</button></div>`;
+          cardsHtml += `
+            <div class="flashcard" id="${recordId}">
+              <div class="flashcard-header">
+                <span class="flashcard-date">📆 ${record.date.year}/${record.date.month}/${record.date.day}</span>
+                <span class="flashcard-weekday">${record.weekday}</span>
+                <span class="flashcard-progress">📊 ${percent}٪</span>
+                <button class="record-delete" data-delete-index="${idx}">🗑️</button>
+              </div>
+              <ul class="flashcard-items">${itemsHtml}</ul>
+              ${record.note ? `<div class="flashcard-note">📝 ${escapeHtml(record.note)}</div>` : ''}
+              <button class="snapshot-btn" data-snapshot="${recordId}">📸 عکس گرفتن</button>
+            </div>
+          `;
         });
         historySection.innerHTML = cardsHtml;
+
         document.querySelectorAll('.record-delete').forEach(btn => {
           btn.addEventListener('click', function(e){
             e.stopPropagation();
@@ -277,6 +327,7 @@
             }
           });
         });
+
         document.querySelectorAll('.snapshot-btn').forEach(btn => {
           btn.addEventListener('click', function(){
             const card = document.getElementById(this.dataset.snapshot);
@@ -289,6 +340,7 @@
           });
         });
       }
+
       function renderChart() {
         const list = getCurrentList();
         if(!list || list.records.length===0) { chartSection.innerHTML='<p style="text-align:center;color:#888;">داده‌ای برای نمودار نیست.</p>'; if(chartInstance){chartInstance.destroy();chartInstance=null;} return; }
@@ -301,6 +353,7 @@
           options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, max:100, ticks:{callback:v=>v+'%'} } } }
         });
       }
+
       function escapeHtml(text) { return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
       addTabBtn.addEventListener('click', addNewList);
@@ -317,14 +370,9 @@
       if(!currentListId && lists.length>0) currentListId = lists[0].id;
       renderAll();
 
-      // ثبت سرویس ورکر برای PWA
       if('serviceWorker' in navigator) {
         window.addEventListener('load', ()=>{
-          navigator.serviceWorker.register('sw.js').then(reg=>{
-            console.log('ServiceWorker registered:', reg.scope);
-          }).catch(err=>{
-            console.log('ServiceWorker failed:', err);
-          });
+          navigator.serviceWorker.register('sw.js').then(reg=> console.log('SW registered')).catch(err=> console.log('SW failed', err));
         });
       }
     })();
